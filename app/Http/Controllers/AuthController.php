@@ -35,7 +35,7 @@ class AuthController extends Controller
                 $token = $user->createToken('API TOKEN')->plainTextToken;
             } else {
                 return response([
-                    'password' => 'Invalid password'
+                    'errors' => ['password' => 'Invalid password']
                 ], 400);
             }
 

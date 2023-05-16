@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NewsApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +19,13 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
     Route::post('/login', 'login');
     Route::post('/register', 'register');
     Route::get('/user', 'user')->middleware('auth:api');
+});
+
+Route::controller(NewsApiController::class)->prefix('news')->middleware('auth:api')->group(function () {
+    // preferences
+    Route::prefix('preferences')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/save', 'save');
+        Route::get('/options', 'options');
+    });
 });
