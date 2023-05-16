@@ -22,10 +22,12 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 });
 
 Route::controller(NewsApiController::class)->prefix('news')->middleware('auth:api')->group(function () {
-    // preferences
+    // news preferences
     Route::prefix('preferences')->group(function () {
-        Route::get('/', 'index');
-        Route::post('/save', 'save');
-        Route::get('/options', 'options');
+        Route::get('/', 'getPreferences');
+        Route::post('/save', 'savePreferences');
+        Route::get('/options', 'getPreferencesOptions');
     });
+    // news
+    Route::get('/', 'getNews');
 });
