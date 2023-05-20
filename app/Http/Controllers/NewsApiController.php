@@ -70,10 +70,6 @@ class NewsApiController extends Controller
     public function getNews(Request $request)
     {
         try {
-            $user = auth()->user();
-            // TODO: use it in home page with news feed!
-            $preferred_sources = implode(',', $user->preferred_sources);
-
             $response = Http::get(env('NEWS_API_BASE_URL') . '/everything', [
                 'apiKey' => env('NEWS_API_KEY'),
                 'q' => $request->q,
@@ -87,6 +83,31 @@ class NewsApiController extends Controller
         } catch (\Exception $e) {
             return response([
                 'error' => 'Failed to fetch news articles!',
+                'articles' => [],
+                'message' => $e,
+            ]);
+        }
+    }
+
+    public function getNewsFeed(Request $request)
+    {
+        $user = auth()->user();
+        $preferred_sources = implode(',', $user->preferred_sources ?? []);
+
+        try {
+            $response = Http::get(env('NEWS_API_BASE_URL') . '/everything', [
+                'apiKey' => env('NEWS_API_KEY'),
+                'q' => $request->q,
+                'to' => $request->to_date,
+                'from' => $request->from_date,
+                'sources' => $request->source ?? $preferred_sources,
+            ]);
+            $articles = $response->json()['articles'];
+
+            return response(['articles' => $articles]);
+        } catch (\Exception $e) {
+            return response([
+                'error' => 'Failed to fetch news feed articles!',
                 'articles' => [],
                 'message' => $e,
             ]);

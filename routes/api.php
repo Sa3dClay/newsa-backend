@@ -22,6 +22,8 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 });
 
 Route::controller(NewsApiController::class)->prefix('news')->middleware('auth:api')->group(function () {
+    Route::get('/', 'getNews');
+    Route::get('/feed', 'getNewsFeed');
     // news preferences
     Route::prefix('preferences')->group(function () {
         Route::get('/', 'getPreferences');
@@ -34,6 +36,4 @@ Route::controller(NewsApiController::class)->prefix('news')->middleware('auth:ap
         Route::post('/follow', 'followAuthor');
         Route::post('/unfollow', 'unfollowAuthor');
     });
-    // news
-    Route::get('/', 'getNews');
 });
