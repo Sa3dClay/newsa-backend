@@ -1,0 +1,72 @@
+version: "2.0"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: newsa.com
+    container_name: newsa-app
+    restart: unless-stopped
+    depends_on:
+      - db
+    tty: true
+    environment:
+      SERVICE_NAME: newsa
+      SERVICE_TAGS: dev
+    working_dir: /var/www/html/
+    volumes:
+      - ./:/var/www/html/
+      - ./php/laravel.ini:/usr/local/etc/php/conf.d/laravel.ini
+    networks:
+      - newsa-network
+
+  db:
+    image: mysql:5.7.32
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: newsa
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - newsa-network
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - 9090:80
+    environment:
+      - UPLOAD_LIMIT=50M
+    networks:
+      - newsa-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./:/var/www/html/
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - newsa-network
+
+networks:
+  newsa-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
