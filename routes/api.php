@@ -28,6 +28,12 @@ Route::controller(NewsApiController::class)->prefix('news')->middleware('auth:ap
         Route::post('/save', 'savePreferences');
         Route::get('/options', 'getPreferencesOptions');
     });
+    // news authors
+    Route::prefix('authors')->group(function () {
+        Route::get('/', 'getFollowedAuthor');
+        Route::post('/follow', 'followAuthor');
+        Route::post('/unfollow', 'unfollowAuthor');
+    });
     // news
     Route::get('/', 'getNews');
 });

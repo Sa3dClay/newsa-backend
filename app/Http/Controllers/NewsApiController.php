@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Http\Requests\FollowAuthorRequest;
 
 class NewsApiController extends Controller
 {
@@ -70,22 +71,78 @@ class NewsApiController extends Controller
     {
         try {
             $user = auth()->user();
+            // TODO: use it in home page with news feed!
             $preferred_sources = implode(',', $user->preferred_sources);
 
             $response = Http::get(env('NEWS_API_BASE_URL') . '/everything', [
-                'q' => $request->q ?? 'e',
                 'apiKey' => env('NEWS_API_KEY'),
-                'sources' => $preferred_sources,
-                'from' => Carbon::yesterday()->format('M d Y'),
+                'q' => $request->q,
+                'to' => $request->to_date,
+                'from' => $request->from_date,
+                'sources' => $request->source,
             ]);
-
-            $data = $response->json();
-            $articles = $data['articles'];
+            $articles = $response->json()['articles'];
 
             return response(['articles' => $articles]);
         } catch (\Exception $e) {
             return response([
                 'error' => 'Failed to fetch news articles!',
+                'articles' => [],
+                'message' => $e,
+            ]);
+        }
+    }
+
+    public function getFollowedAuthor()
+    {
+        $user = auth()->user();
+
+        return response([
+            'preferred_authors' => $user->preferred_authors ?? []
+        ]);
+    }
+
+    public function followAuthor(FollowAuthorRequest $request)
+    {
+        try {
+            $user = auth()->user();
+            $authorName = $request->author_name;
+            $preferredAuthors = $user->preferred_authors ?? [];
+
+            if (!in_array($authorName, $preferredAuthors)) {
+                $preferredAuthors[] = $authorName;
+            }
+
+            $user->preferred_authors = $preferredAuthors;
+            $user->save();
+
+            return response(['message' => 'You are now following ' . $authorName]);
+        } catch (\Exception $e) {
+            return response([
+                'error' => 'Failed to follow author!',
+                'message' => $e,
+            ]);
+        }
+    }
+
+    public function unfollowAuthor(FollowAuthorRequest $request)
+    {
+        try {
+            $user = auth()->user();
+            $authorName = $request->author_name;
+            $preferredAuthors = $user->preferred_authors ?? [];
+
+            $preferredAuthors = array_filter($preferredAuthors, function ($author) use ($authorName) {
+                return $author !== $authorName;
+            }, ARRAY_FILTER_USE_BOTH);
+
+            $user->preferred_authors = $preferredAuthors;
+            $user->save();
+
+            return response(['message' => 'You are now not following ' . $request->author_name]);
+        } catch (\Exception $e) {
+            return response([
+                'error' => 'Failed to unfollow author!',
                 'message' => $e,
             ]);
         }
